@@ -18,7 +18,7 @@ public class CircuitBreakerInitializer {
     return result;
   }
 */
-  public void setRoot(String root) {
-    this.root = root;
-  }
+    public void setRoot(String root) {
+        this.root = root;
+    }
 }

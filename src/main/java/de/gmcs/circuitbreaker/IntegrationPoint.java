@@ -9,5 +9,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface IntegrationPoint {
 
-  double threashold() default 0.05;
+    double maxErrorRatio() default 0.05;
+    long timeout() default 5000;
 }

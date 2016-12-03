@@ -5,14 +5,14 @@ import org.junit.Test;
 
 public class CircuitBreakerInitializerTest {
 
-  private CircuitBreakerInitializer circuitBreakerInitializer;
+    private CircuitBreakerInitializer circuitBreakerInitializer;
 
-  @Before
-  public void setUp() {
-    circuitBreakerInitializer = new CircuitBreakerInitializer();
-  }
+    @Before
+    public void setUp() {
+        circuitBreakerInitializer = new CircuitBreakerInitializer();
+    }
 
-  @Test
-  public void test() {
-  }
+    @Test
+    public void test() {
+    }
 }
