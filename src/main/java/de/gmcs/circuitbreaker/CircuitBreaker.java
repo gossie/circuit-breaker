@@ -32,11 +32,6 @@ public class CircuitBreaker {
         this.timeout = timeout;
     }
 
-    /**
-     *
-     * @param argument The argument is passed to the encapsulated function.
-     * @return Returns an optional of the return value of the encapsulated function.
-     */
     @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
     public Object call(ProceedingJoinPoint point) {
         Object result;
