@@ -8,6 +8,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.Optional;
 
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.ProceedingJoinPoint;
+
+@Aspect
 public class CircuitBreaker {
 
     private enum Status {
@@ -21,12 +26,10 @@ public class CircuitBreaker {
     private long unsuccessfulCalls;
     private double maxErrorRatio;
     private long timeout;
-    private Function<Object, Object> function;
 
-    public CircuitBreaker(double maxErrorRatio, long timeout, Function<Object, Object> function) {
+    public CircuitBreaker(double maxErrorRatio, long timeout) {
         this.maxErrorRatio = maxErrorRatio;
         this.timeout = timeout;
-        this.function = function;
     }
 
     /**
@@ -34,16 +37,17 @@ public class CircuitBreaker {
      * @param argument The argument is passed to the encapsulated function.
      * @return Returns an optional of the return value of the encapsulated function.
      */
-    public Optional<Object> call(Object argument) {
-        Optional<Object> result;
+    @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
+    public Object call(ProceedingJoinPoint point) {
+        Object result;
 
         ExecutorService threadpool = Executors.newFixedThreadPool(1);
-        Future<Object> future = threadpool.submit(new ServiceCall(argument));
+        Future<Object> future = threadpool.submit(new ServiceCall(point));
         try {
-            result = Optional.of(future.get(timeout, TimeUnit.MILLISECONDS));
+            result = future.get(timeout, TimeUnit.MILLISECONDS);
             ++successfulCalls;
         } catch(Exception e) {
-            result = Optional.empty();
+            result = null;
             ++unsuccessfulCalls;
         } finally {
             threadpool.shutdown();
@@ -54,16 +58,16 @@ public class CircuitBreaker {
 
 
     private class ServiceCall implements Callable<Object> {
-        private Object argument;
+        private ProceedingJoinPoint point;
 
-        ServiceCall(Object argument) {
-            this.argument = argument;
+        ServiceCall(ProceedingJoinPoint point) {
+            this.point = point;
         }
 
         public Object call() {
             try {
-                return function.apply(argument);
-            } catch(Exception e) {
+                return point.proceed();
+            } catch(Throwable e) {
                 throw new RuntimeException();
             }
         }
