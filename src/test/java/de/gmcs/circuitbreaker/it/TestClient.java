@@ -8,7 +8,7 @@ public class TestClient {
 
     private TestService service = new TestService();
 
-    @IntegrationPoint
+    @IntegrationPoint(timeout = 250)
     public Integer serviceCall() {
         return service.service();
     }

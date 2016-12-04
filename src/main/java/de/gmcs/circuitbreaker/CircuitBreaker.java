@@ -1,5 +1,7 @@
 package de.gmcs.circuitbreaker;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
@@ -8,12 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.Optional;
 
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.ProceedingJoinPoint;
-
-@Aspect
-public class CircuitBreaker {
+public class CircuitBreaker implements InvocationHandler {
 
     private enum Status {
         OPEN,
@@ -24,20 +21,17 @@ public class CircuitBreaker {
     private Status status = Status.OPEN;
     private long successfulCalls;
     private long unsuccessfulCalls;
-    private double maxErrorRatio;
-    private long timeout;
 
-    public CircuitBreaker(double maxErrorRatio, long timeout) {
-        this.maxErrorRatio = maxErrorRatio;
-        this.timeout = timeout;
-    }
+    @Override
+    public Object invoke(Object instance, Method method, Object[] args) {
+        double maxErrorRatio = determineMaxErrorRatio(method);
+        long timeout = determineTimeout(method);
 
-    @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
-    public Object call(ProceedingJoinPoint point) {
         Object result;
 
         ExecutorService threadpool = Executors.newFixedThreadPool(1);
-        Future<Object> future = threadpool.submit(new ServiceCall(point));
+        Future<Object> future = threadpool.submit(new ServiceCall(instance, method, args));
+
         try {
             result = future.get(timeout, TimeUnit.MILLISECONDS);
             ++successfulCalls;
@@ -51,19 +45,34 @@ public class CircuitBreaker {
         return result;
     }
 
+    private double determineMaxErrorRatio(Method method) {
+        IntegrationPoint annotation = method.getAnnotation(IntegrationPoint.class);
+        return annotation.maxErrorRatio();
+    }
 
-    private class ServiceCall implements Callable<Object> {
-        private ProceedingJoinPoint point;
+    private long determineTimeout(Method method) {
+        IntegrationPoint annotation = method.getAnnotation(IntegrationPoint.class);
+        return annotation.timeout();
+    }
 
-        ServiceCall(ProceedingJoinPoint point) {
-            this.point = point;
+
+    private static class ServiceCall implements Callable<Object> {
+
+        private Method method;
+        private Object instance;
+        private Object[] args;
+
+        ServiceCall(Object instance, Method method, Object[] args) {
+            this.method = method;
+            this.instance = instance;
+            this.args = args;
         }
 
         public Object call() {
             try {
-                return point.proceed();
-            } catch(Throwable e) {
-                throw new RuntimeException();
+                return method.invoke(instance, args);
+            } catch(Exception e) {
+                throw new RuntimeException(e);
             }
         }
     }
