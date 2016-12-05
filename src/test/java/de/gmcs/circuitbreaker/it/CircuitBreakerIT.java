@@ -12,6 +12,6 @@ public class CircuitBreakerIT {
     public void test() throws Exception {
         CircuitBreakerInitializer circuitBreakerInitializer = new CircuitBreakerInitializer();
         circuitBreakerInitializer.setRoot("de/gmcs/circuitbreaker");
-        //circuitBreakerInitializer.scan();
+        circuitBreakerInitializer.scan();
     }
 }

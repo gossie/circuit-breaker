@@ -28,6 +28,7 @@ public class CircuitBreakerInitializer {
     }
 
     public void scan() throws IOException {
+      /*
         for (URL url : getRootUrls()) {
             File f = new File (url.getPath());
             if (f.isDirectory()) {
@@ -36,8 +37,9 @@ public class CircuitBreakerInitializer {
                 visitJar(url);
             }
         }
+        */
     }
-
+/*
     private List<URL> getRootUrls() throws IOException {
         List<URL> result = new ArrayList<> ();
 
@@ -113,9 +115,10 @@ public class CircuitBreakerInitializer {
             super(Opcodes.ASM5);
             this.currentClassName = currentClassName;
         }
-/*
+
         public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
             return null;
-        }*/
+        }
     }
+    */
 }
