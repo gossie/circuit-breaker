@@ -1,58 +1,50 @@
 package de.gmcs.circuitbreaker;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Method;
-import java.util.function.Function;
-
-import org.junit.Before;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 public class CircuitBreakerTest {
 
     @Test
     public void testCall() throws Throwable {
-        Client client = new Client();
-        Method method = Client.class.getMethod("call", Integer.class);
+        ProceedingJoinPoint point = mockProceedingJoinPoint();
+        when(point.proceed()).thenReturn(1);
 
         CircuitBreaker circuitBreaker = new CircuitBreaker();
-        Object result = circuitBreaker.invoke(client, method, new Object[] { Integer.valueOf(0) });
 
-        assertThat(result)
-            .isEqualTo(1);
+        assertThat(circuitBreaker.call(point)).isEqualTo(1);
     }
 
     @Test
     public void testCall_error() throws Throwable {
-        Client client = new Client() {
-            @IntegrationPoint
-            public Integer call(Integer i) {
-                throw new RuntimeException();
-            }
-        };
-        Method method = Client.class.getMethod("call", Integer.class);
+        ProceedingJoinPoint point = mockProceedingJoinPoint();
+        when(point.proceed()).thenThrow(new RuntimeException());
 
         CircuitBreaker circuitBreaker = new CircuitBreaker();
-        Object result = circuitBreaker.invoke(client, method, new Object[] { Integer.valueOf(0) });
 
-        assertThat(result).isNull();
+        assertThat(circuitBreaker.call(point)).isNull();
     }
 
     @Test
     public void testCall_timeout() throws Throwable {
-      Client client = new Client() {
-          @IntegrationPoint
-          public Integer call(Integer i) {
-              sleep(500);
-              return super.call(i);
-          }
-      };
-      Method method = Client.class.getMethod("call", Integer.class);
+        ProceedingJoinPoint point = mockProceedingJoinPoint();
+        when(point.proceed()).thenAnswer(new Answer<Integer>() {
+            public Integer answer(InvocationOnMock invocation) throws Throwable {
+                sleep(500);
+                return Integer.valueOf(1);
+            }
+        });
 
-      CircuitBreaker circuitBreaker = new CircuitBreaker();
-      Object result = circuitBreaker.invoke(client, method, new Object[] { Integer.valueOf(0) });
+        CircuitBreaker circuitBreaker = new CircuitBreaker();
 
-      assertThat(result).isNull();
+        assertThat(circuitBreaker.call(point)).isNull();
     }
 
     private void sleep(long millis) {
@@ -60,12 +52,22 @@ public class CircuitBreakerTest {
             Thread.sleep(millis);
         } catch(InterruptedException e) {}
     }
-
-
-    private static class Client {
-        @IntegrationPoint
-        public Integer call(Integer i) {
-            return i.intValue() + 1;
-        }
+    
+    private ProceedingJoinPoint mockProceedingJoinPoint()  throws Exception {
+    	MethodSignature signature = mock(MethodSignature.class);
+    	when(signature.getMethod()).thenReturn(TestClient.class.getMethod("callService", Object.class));
+    	
+    	ProceedingJoinPoint point = mock(ProceedingJoinPoint.class);
+    	when(point.getSignature()).thenReturn(signature);
+    	
+    	return point;
+    }
+    
+    
+    private static class TestClient {
+    	@IntegrationPoint(maxErrorRatio = 0.05, timeout = 250)
+    	public Object callService(Object o) {
+    		return null;
+    	}
     }
 }
