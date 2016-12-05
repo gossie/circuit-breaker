@@ -10,8 +10,10 @@ import java.lang.annotation.Target;
 public @interface IntegrationPoint {
 
     public static final double DEFAULT_MAX_ERROR_RATIO = 0.05;
-    public static final long DEFAULT_TIMEOUT = 250L;
+    public static final long DEFAULT_ERROR_TIMEOUT = 250L;
+    public static final long DEFAULT_OPEN_TIMEOUT = 5000L;
 
     double maxErrorRatio() default DEFAULT_MAX_ERROR_RATIO;
-    long timeout() default DEFAULT_TIMEOUT;
+    long errorTimeout() default DEFAULT_ERROR_TIMEOUT;
+    long openTimeout() default DEFAULT_OPEN_TIMEOUT;
 }

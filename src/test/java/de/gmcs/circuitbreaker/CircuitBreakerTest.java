@@ -1,6 +1,7 @@
 package de.gmcs.circuitbreaker;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -47,25 +48,45 @@ public class CircuitBreakerTest {
         assertThat(circuitBreaker.call(point)).isNull();
     }
 
+    @Test
+    public void testCall_circuitBreakerOpensUp() throws Throwable {
+        ProceedingJoinPoint point = mockProceedingJoinPoint();
+        when(point.proceed())
+            .thenReturn(1)
+            .thenReturn(2)
+            .thenThrow(new RuntimeException());
+
+        CircuitBreaker circuitBreaker = new CircuitBreaker();
+
+        assertThat(circuitBreaker.call(point)).isEqualTo(1);
+        assertThat(circuitBreaker.call(point)).isEqualTo(2);
+        assertThat(circuitBreaker.call(point)).isEqualTo(null);
+        assertThatExceptionOfType(CircuitBreakerOpenException.class)
+           .isThrownBy(() -> {circuitBreaker.call(point);})
+           .withStackTraceContaining("circuitbreaker is currently open and cannot handle operations");
+    }
+
     private void sleep(long millis) {
         try {
             Thread.sleep(millis);
-        } catch(InterruptedException e) {}
+        } catch(InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
-    
+
     private ProceedingJoinPoint mockProceedingJoinPoint()  throws Exception {
     	MethodSignature signature = mock(MethodSignature.class);
     	when(signature.getMethod()).thenReturn(TestClient.class.getMethod("callService", Object.class));
-    	
+
     	ProceedingJoinPoint point = mock(ProceedingJoinPoint.class);
     	when(point.getSignature()).thenReturn(signature);
-    	
+
     	return point;
     }
-    
-    
+
+
     private static class TestClient {
-    	@IntegrationPoint(maxErrorRatio = 0.05, timeout = 250)
+    	@IntegrationPoint(maxErrorRatio = 0.4, errorTimeout = 250)
     	public Object callService(Object o) {
     		return null;
     	}

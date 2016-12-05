@@ -20,12 +20,16 @@ public class CircuitBreaker {
         CLOSED
     }
 
-    private Status status = Status.OPEN;
+    private Status status = Status.CLOSED;
     private long successfulCalls;
     private long unsuccessfulCalls;
 
     @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
-    public Object call(ProceedingJoinPoint point) {
+    public Object call(ProceedingJoinPoint point) throws CircuitBreakerOpenException {
+        if(status == Status.OPEN) {
+            throw new CircuitBreakerOpenException("circuitbreaker is currently open and cannot handle operations");
+        }
+
         double maxErrorRatio = determineMaxErrorRatio(point);
         long timeout = determineTimeout(point);
 
@@ -41,10 +45,33 @@ public class CircuitBreaker {
             result = null;
             ++unsuccessfulCalls;
         } finally {
+            calculateStatus(maxErrorRatio);
             threadpool.shutdown();
         }
-
+        StringBuilder builder = new StringBuilder()
+            .append("successfulCalls: ")
+            .append(successfulCalls)
+            .append("     unsuccessfulCalls: ")
+            .append(unsuccessfulCalls)
+            .append("     currentRatio: ")
+            .append(calculateCurrentRatio())
+            .append("     status: ")
+            .append(status);
+        //System.out.println(builder.toString());
         return result;
+    }
+
+    private void calculateStatus(double maxErrorRatio) {
+        if(calculateCurrentRatio() > maxErrorRatio) {
+            status = Status.OPEN;
+        }
+    }
+
+    private double calculateCurrentRatio() {
+        if(successfulCalls == 0.0) {
+            return 1.0;
+        }
+        return (double) unsuccessfulCalls / successfulCalls;
     }
 
     private double determineMaxErrorRatio(ProceedingJoinPoint point) {
@@ -54,9 +81,9 @@ public class CircuitBreaker {
 
     private long determineTimeout(ProceedingJoinPoint point) {
         IntegrationPoint annotation = retrieveAnntotation(point);
-        return annotation.timeout();
+        return annotation.errorTimeout();
     }
-    
+
     private IntegrationPoint retrieveAnntotation(ProceedingJoinPoint point) {
     	return ((MethodSignature) point.getSignature()).getMethod().getAnnotation(IntegrationPoint.class);
     }
