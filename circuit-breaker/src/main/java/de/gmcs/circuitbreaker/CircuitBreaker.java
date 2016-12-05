@@ -48,16 +48,7 @@ public class CircuitBreaker {
             calculateStatus(maxErrorRatio);
             threadpool.shutdown();
         }
-        StringBuilder builder = new StringBuilder()
-            .append("successfulCalls: ")
-            .append(successfulCalls)
-            .append("     unsuccessfulCalls: ")
-            .append(unsuccessfulCalls)
-            .append("     currentRatio: ")
-            .append(calculateCurrentRatio())
-            .append("     status: ")
-            .append(status);
-        //System.out.println(builder.toString());
+        
         return result;
     }
 
