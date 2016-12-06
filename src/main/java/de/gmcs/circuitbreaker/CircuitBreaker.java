@@ -21,13 +21,15 @@ public class CircuitBreaker {
 
     @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
     public Object call(ProceedingJoinPoint point) throws CircuitBreakerOpenException, InterruptedException {
-        initializeState(point);
+        IntegrationPoint annotation = retrieveAnntotation(point);
+
+        initializeState(annotation);
 
         if (state.isOpen()) {
             throw new CircuitBreakerOpenException("circuitbreaker is currently open and cannot handle operations");
         }
 
-        long timeout = determineValue(point, (a) -> a.errorTimeout());
+        long timeout = annotation.errorTimeout();
 
         Object result;
 
@@ -49,38 +51,13 @@ public class CircuitBreaker {
         return result;
     }
 
-    private void initializeState(ProceedingJoinPoint point) {
+    private void initializeState(IntegrationPoint annotation) {
         if(state == null) {
-            double maxErrorRatio = determineValue(point, (a) -> a.maxErrorRatio());
-            long openTimePeriod = determineValue(point, (a) -> a.openTimePeriod());
-            state = new State(maxErrorRatio, openTimePeriod);
+            state = new State(annotation.maxErrorRatio(), annotation.openTimePeriod());
         }
-    }
-
-	private <T> T determineValue(ProceedingJoinPoint point, Function<IntegrationPoint, T> function) {
-        IntegrationPoint annotation = retrieveAnntotation(point);
-        return function.apply(annotation);
     }
 
     private IntegrationPoint retrieveAnntotation(ProceedingJoinPoint point) {
         return ((MethodSignature) point.getSignature()).getMethod().getAnnotation(IntegrationPoint.class);
-    }
-
-    private static class ServiceCall implements Callable<Object> {
-
-        private ProceedingJoinPoint point;
-
-        ServiceCall(ProceedingJoinPoint point) {
-            this.point = point;
-        }
-
-        @Override
-        public Object call() {
-            try {
-                return point.proceed();
-            } catch (Throwable e) {
-                throw new IntegrationPointExecutionException(e);
-            }
-        }
     }
 }

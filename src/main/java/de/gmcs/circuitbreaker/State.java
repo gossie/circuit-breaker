@@ -2,7 +2,7 @@ package de.gmcs.circuitbreaker;
 
 import java.util.Date;
 
-public class State {
+class State {
 
     private enum Status {
         OPEN,
@@ -18,7 +18,7 @@ public class State {
     private long unsuccessfulCalls;
     private long openTimestamp;
 
-    public State(double maxErrorRatio, long openTimePeriod) {
+    State(double maxErrorRatio, long openTimePeriod) {
         this.maxErrorRatio = maxErrorRatio;
         this.openTimePeriod = openTimePeriod;
     }
