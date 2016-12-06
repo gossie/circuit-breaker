@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -26,7 +27,7 @@ public class CircuitBreaker {
             throw new CircuitBreakerOpenException("circuitbreaker is currently open and cannot handle operations");
         }
 
-        long timeout = determineTimeout(point);
+        long timeout = determineValue(point, (a) -> a.errorTimeout());
 
         Object result;
 
@@ -50,25 +51,15 @@ public class CircuitBreaker {
 
     private void initializeState(ProceedingJoinPoint point) {
         if(state == null) {
-            double maxErrorRatio = determineMaxErrorRatio(point);
-            long openTimePeriod = determineOpenTimePeriod(point);
+            double maxErrorRatio = determineValue(point, (a) -> a.maxErrorRatio());
+            long openTimePeriod = determineValue(point, (a) -> a.openTimePeriod());
             state = new State(maxErrorRatio, openTimePeriod);
         }
     }
 
-    private double determineMaxErrorRatio(ProceedingJoinPoint point) {
+	private <T> T determineValue(ProceedingJoinPoint point, Function<IntegrationPoint, T> function) {
         IntegrationPoint annotation = retrieveAnntotation(point);
-        return annotation.maxErrorRatio();
-    }
-
-    private long determineTimeout(ProceedingJoinPoint point) {
-        IntegrationPoint annotation = retrieveAnntotation(point);
-        return annotation.errorTimeout();
-    }
-
-    private long determineOpenTimePeriod(ProceedingJoinPoint point) {
-        IntegrationPoint annotation = retrieveAnntotation(point);
-        return annotation.openTimePeriod();
+        return function.apply(annotation);
     }
 
     private IntegrationPoint retrieveAnntotation(ProceedingJoinPoint point) {
