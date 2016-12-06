@@ -1,32 +1,31 @@
 package de.gmcs.circuitbreaker;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+import de.gmcs.circuitbreaker.status.Closed;
+import de.gmcs.circuitbreaker.status.Open;
+import de.gmcs.circuitbreaker.status.Status;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.aspectj.lang.ProceedingJoinPoint;
 
 @Aspect
 public class CircuitBreaker {
 
-    private enum Status {
-        OPEN,
-        HALF_OPEN,
-        CLOSED
-    }
-
-    private Status status = Status.CLOSED;
+    private Status status = new Closed();
     private long successfulCalls;
     private long unsuccessfulCalls;
 
     @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
-    public Object call(ProceedingJoinPoint point) throws CircuitBreakerOpenException {
-        if(status == Status.OPEN) {
+    public Object call(ProceedingJoinPoint point) throws CircuitBreakerOpenException, InterruptedException {
+        if (status instanceof Open) {
             throw new CircuitBreakerOpenException("circuitbreaker is currently open and cannot handle operations");
         }
 
@@ -41,25 +40,27 @@ public class CircuitBreaker {
         try {
             result = future.get(timeout, TimeUnit.MILLISECONDS);
             ++successfulCalls;
-        } catch(Exception e) {
+        } catch (ExecutionException | TimeoutException e) {
             result = null;
             ++unsuccessfulCalls;
+        } catch (InterruptedException e) {
+            throw e;
         } finally {
             calculateStatus(maxErrorRatio);
             threadpool.shutdown();
         }
-        
+
         return result;
     }
 
     private void calculateStatus(double maxErrorRatio) {
-        if(calculateCurrentRatio() > maxErrorRatio) {
-            status = Status.OPEN;
+        if (calculateCurrentRatio() > maxErrorRatio) {
+            status = new Open();
         }
     }
 
     private double calculateCurrentRatio() {
-        if(successfulCalls == 0.0) {
+        if (successfulCalls == 0L) {
             return 1.0;
         }
         return (double) unsuccessfulCalls / successfulCalls;
@@ -76,9 +77,8 @@ public class CircuitBreaker {
     }
 
     private IntegrationPoint retrieveAnntotation(ProceedingJoinPoint point) {
-    	return ((MethodSignature) point.getSignature()).getMethod().getAnnotation(IntegrationPoint.class);
+        return ((MethodSignature) point.getSignature()).getMethod().getAnnotation(IntegrationPoint.class);
     }
-
 
     private static class ServiceCall implements Callable<Object> {
 
@@ -88,11 +88,12 @@ public class CircuitBreaker {
             this.point = point;
         }
 
+        @Override
         public Object call() {
             try {
                 return point.proceed();
-            } catch(Throwable e) {
-                throw new RuntimeException(e);
+            } catch (Throwable e) {
+                throw new IntegrationPointExecutionException(e);
             }
         }
     }

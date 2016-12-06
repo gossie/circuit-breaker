@@ -37,6 +37,8 @@ public class CircuitBreakerTest {
     public void testCall_timeout() throws Throwable {
         ProceedingJoinPoint point = mockProceedingJoinPoint();
         when(point.proceed()).thenAnswer(new Answer<Integer>() {
+
+            @Override
             public Integer answer(InvocationOnMock invocation) throws Throwable {
                 sleep(500);
                 return Integer.valueOf(1);
@@ -52,43 +54,43 @@ public class CircuitBreakerTest {
     public void testCall_circuitBreakerOpensUp() throws Throwable {
         ProceedingJoinPoint point = mockProceedingJoinPoint();
         when(point.proceed())
-            .thenReturn(1)
-            .thenReturn(2)
-            .thenThrow(new RuntimeException());
+                .thenReturn(1)
+                .thenReturn(2)
+                .thenThrow(new RuntimeException());
 
         CircuitBreaker circuitBreaker = new CircuitBreaker();
 
         assertThat(circuitBreaker.call(point)).isEqualTo(1);
         assertThat(circuitBreaker.call(point)).isEqualTo(2);
         assertThat(circuitBreaker.call(point)).isEqualTo(null);
-        assertThatExceptionOfType(CircuitBreakerOpenException.class)
-           .isThrownBy(() -> {circuitBreaker.call(point);})
-           .withStackTraceContaining("circuitbreaker is currently open and cannot handle operations");
+        assertThatExceptionOfType(CircuitBreakerOpenException.class).isThrownBy(() -> {
+            circuitBreaker.call(point);
+        }).withStackTraceContaining("circuitbreaker is currently open and cannot handle operations");
     }
 
     private void sleep(long millis) {
         try {
             Thread.sleep(millis);
-        } catch(InterruptedException e) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
 
-    private ProceedingJoinPoint mockProceedingJoinPoint()  throws Exception {
-    	MethodSignature signature = mock(MethodSignature.class);
-    	when(signature.getMethod()).thenReturn(TestClient.class.getMethod("callService", Object.class));
+    private ProceedingJoinPoint mockProceedingJoinPoint() throws Exception {
+        MethodSignature signature = mock(MethodSignature.class);
+        when(signature.getMethod()).thenReturn(TestClient.class.getMethod("callService", Object.class));
 
-    	ProceedingJoinPoint point = mock(ProceedingJoinPoint.class);
-    	when(point.getSignature()).thenReturn(signature);
+        ProceedingJoinPoint point = mock(ProceedingJoinPoint.class);
+        when(point.getSignature()).thenReturn(signature);
 
-    	return point;
+        return point;
     }
 
-
     private static class TestClient {
-    	@IntegrationPoint(maxErrorRatio = 0.4, errorTimeout = 250)
-    	public Object callService(Object o) {
-    		return null;
-    	}
+
+        @IntegrationPoint(maxErrorRatio = 0.4, errorTimeout = 250)
+        public Object callService(Object o) {
+            return null;
+        }
     }
 }
