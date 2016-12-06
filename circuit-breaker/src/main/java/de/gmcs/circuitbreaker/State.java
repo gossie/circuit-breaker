@@ -1,5 +1,7 @@
 package de.gmcs.circuitbreaker;
 
+import java.util.Date;
+
 public class State {
 
     private enum Status {
@@ -8,27 +10,46 @@ public class State {
         CLOSED
     }
 
+    private double maxErrorRatio;
+    private long openTimePeriod;
+
     private Status status = Status.CLOSED;
     private long successfulCalls;
     private long unsuccessfulCalls;
+    private long openTimestamp;
 
+    public State(double maxErrorRatio, long openTimePeriod) {
+        this.maxErrorRatio = maxErrorRatio;
+        this.openTimePeriod = openTimePeriod;
+    }
 
     public void incrementSuccessfulCalls() {
         ++successfulCalls;
+        if(status == Status.OPEN) {
+            status = Status.HALF_OPEN;
+        } else if(status == Status.HALF_OPEN) {
+            if(calculateCurrentRatio() <= maxErrorRatio) {
+                status = Status.CLOSED;
+            }
+        }
     }
 
     public void incrementUnsuccessfulCalls() {
         ++unsuccessfulCalls;
+
+        if((status == Status.CLOSED && calculateCurrentRatio() > maxErrorRatio) || status == Status.HALF_OPEN || status == Status.OPEN) {
+            openUp();
+        }
     }
 
     public boolean isOpen() {
-        return status == Status.OPEN;
+        long currentOpenTime = new Date().getTime() - openTimestamp;
+        return status == Status.OPEN && currentOpenTime <= openTimePeriod;
     }
 
-    public void calculateStatus(double maxErrorRatio) {
-        if (calculateCurrentRatio() > maxErrorRatio) {
-            status = Status.OPEN;
-        }
+    private void openUp() {
+        status = Status.OPEN;
+        openTimestamp = new Date().getTime();
     }
 
     private double calculateCurrentRatio() {

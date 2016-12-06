@@ -56,7 +56,11 @@ public class CircuitBreakerTest {
         when(point.proceed())
                 .thenReturn(1)
                 .thenReturn(2)
-                .thenThrow(new RuntimeException());
+                .thenThrow(new RuntimeException())
+                .thenThrow(new RuntimeException())
+                .thenReturn(3)
+                .thenReturn(4)
+                .thenReturn(5);
 
         CircuitBreaker circuitBreaker = new CircuitBreaker();
 
@@ -66,6 +70,15 @@ public class CircuitBreakerTest {
         assertThatExceptionOfType(CircuitBreakerOpenException.class).isThrownBy(() -> {
             circuitBreaker.call(point);
         }).withStackTraceContaining("circuitbreaker is currently open and cannot handle operations");
+        sleep(1000);
+        assertThat(circuitBreaker.call(point)).isEqualTo(null);
+        assertThatExceptionOfType(CircuitBreakerOpenException.class).isThrownBy(() -> {
+            circuitBreaker.call(point);
+        }).withStackTraceContaining("circuitbreaker is currently open and cannot handle operations");
+        sleep(1000);
+        assertThat(circuitBreaker.call(point)).isEqualTo(3);
+        assertThat(circuitBreaker.call(point)).isEqualTo(4);
+        assertThat(circuitBreaker.call(point)).isEqualTo(5);
     }
 
     private void sleep(long millis) {
@@ -88,7 +101,7 @@ public class CircuitBreakerTest {
 
     private static class TestClient {
 
-        @IntegrationPoint(maxErrorRatio = 0.4, errorTimeout = 250)
+        @IntegrationPoint(maxErrorRatio = 0.4, errorTimeout = 250, openTimePeriod = 1000)
         public Object callService(Object o) {
             return null;
         }

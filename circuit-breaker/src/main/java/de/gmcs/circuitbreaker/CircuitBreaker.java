@@ -16,15 +16,16 @@ import org.aspectj.lang.reflect.MethodSignature;
 @Aspect
 public class CircuitBreaker {
 
-    private State state = new State();
+    private State state;
 
     @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
     public Object call(ProceedingJoinPoint point) throws CircuitBreakerOpenException, InterruptedException {
+        initializeState(point);
+
         if (state.isOpen()) {
             throw new CircuitBreakerOpenException("circuitbreaker is currently open and cannot handle operations");
         }
 
-        double maxErrorRatio = determineMaxErrorRatio(point);
         long timeout = determineTimeout(point);
 
         Object result;
@@ -41,11 +42,18 @@ public class CircuitBreaker {
         } catch (InterruptedException e) {
             throw e;
         } finally {
-            state.calculateStatus(maxErrorRatio);
             threadpool.shutdown();
         }
 
         return result;
+    }
+
+    private void initializeState(ProceedingJoinPoint point) {
+        if(state == null) {
+            double maxErrorRatio = determineMaxErrorRatio(point);
+            long openTimePeriod = determineOpenTimePeriod(point);
+            state = new State(maxErrorRatio, openTimePeriod);
+        }
     }
 
     private double determineMaxErrorRatio(ProceedingJoinPoint point) {
@@ -56,6 +64,11 @@ public class CircuitBreaker {
     private long determineTimeout(ProceedingJoinPoint point) {
         IntegrationPoint annotation = retrieveAnntotation(point);
         return annotation.errorTimeout();
+    }
+
+    private long determineOpenTimePeriod(ProceedingJoinPoint point) {
+        IntegrationPoint annotation = retrieveAnntotation(point);
+        return annotation.openTimePeriod();
     }
 
     private IntegrationPoint retrieveAnntotation(ProceedingJoinPoint point) {
