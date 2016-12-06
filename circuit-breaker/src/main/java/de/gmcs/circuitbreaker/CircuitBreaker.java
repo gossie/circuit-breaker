@@ -8,9 +8,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import de.gmcs.circuitbreaker.status.Closed;
-import de.gmcs.circuitbreaker.status.Open;
-import de.gmcs.circuitbreaker.status.Status;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -19,13 +16,11 @@ import org.aspectj.lang.reflect.MethodSignature;
 @Aspect
 public class CircuitBreaker {
 
-    private Status status = new Closed();
-    private long successfulCalls;
-    private long unsuccessfulCalls;
+    private State state = new State();
 
     @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
     public Object call(ProceedingJoinPoint point) throws CircuitBreakerOpenException, InterruptedException {
-        if (status instanceof Open) {
+        if (state.isOpen()) {
             throw new CircuitBreakerOpenException("circuitbreaker is currently open and cannot handle operations");
         }
 
@@ -39,31 +34,18 @@ public class CircuitBreaker {
 
         try {
             result = future.get(timeout, TimeUnit.MILLISECONDS);
-            ++successfulCalls;
+            state.incrementSuccessfulCalls();
         } catch (ExecutionException | TimeoutException e) {
             result = null;
-            ++unsuccessfulCalls;
+            state.incrementUnsuccessfulCalls();
         } catch (InterruptedException e) {
             throw e;
         } finally {
-            calculateStatus(maxErrorRatio);
+            state.calculateStatus(maxErrorRatio);
             threadpool.shutdown();
         }
 
         return result;
-    }
-
-    private void calculateStatus(double maxErrorRatio) {
-        if (calculateCurrentRatio() > maxErrorRatio) {
-            status = new Open();
-        }
-    }
-
-    private double calculateCurrentRatio() {
-        if (successfulCalls == 0L) {
-            return 1.0;
-        }
-        return (double) unsuccessfulCalls / successfulCalls;
     }
 
     private double determineMaxErrorRatio(ProceedingJoinPoint point) {
