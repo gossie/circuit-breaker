@@ -12,7 +12,7 @@ TODO: example
 There are two different ways to integrate a CircuitBreaker...
 Either way you need to add the circuitbreaker dependency to your project.
 
-```
+```xml
 <dependency>
   <groupId>de.gmcs</groupId>
   <artifactId>circuitbreaker</artifactId>
@@ -23,7 +23,7 @@ Either way you need to add the circuitbreaker dependency to your project.
 ### Integraton with AspectJ
 The CircuitBreaker class is annotated with the @Aspect annotation of the AspectJ framework. It wraps around all methods that are annotated with the `de.gmcs.circuitbreaker.IntegrationPoint` annotation.
 
-```
+```java
 public class Client {
     private Service service;
     
@@ -36,7 +36,7 @@ public class Client {
 
 Add the aspectj-maven-plugin to make sure that the CircuitBreaker aspect is weaved around your IntegrationPoints.
 
-```
+```xml
 <plugin>
     <groupId>org.codehaus.mojo</groupId>
     <artifactId>aspectj-maven-plugin</artifactId>
