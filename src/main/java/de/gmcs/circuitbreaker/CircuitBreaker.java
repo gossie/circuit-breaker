@@ -6,7 +6,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -18,7 +17,7 @@ public class CircuitBreaker {
 
     private State state;
 
-    @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
+    @Around("execution(private * *(..)) && @annotation(IntegrationPoint)")
     public Object call(ProceedingJoinPoint point) throws CircuitBreakerOpenException, InterruptedException {
         IntegrationPoint annotation = retrieveAnntotation(point);
 
@@ -51,7 +50,7 @@ public class CircuitBreaker {
     }
 
     private void initializeState(IntegrationPoint annotation) {
-        if(state == null) {
+        if (state == null) {
             state = new State(annotation.maxErrorRatio(), annotation.openTimePeriod());
         }
     }
