@@ -61,11 +61,11 @@ class State {
     public String toString() {
         return new StringBuilder().append("status: ")
                 .append(status)
-                .append("\tsuccessfulCalls: ")
+                .append(" successfulCalls: ")
                 .append(successfulCalls)
-                .append("\tunsuccessfulCalls: ")
+                .append(" unsuccessfulCalls: ")
                 .append(unsuccessfulCalls)
-                .append("\tcurrentRatio: ")
+                .append(" currentRatio: ")
                 .append(calculateCurrentRatio())
                 .toString();
     }

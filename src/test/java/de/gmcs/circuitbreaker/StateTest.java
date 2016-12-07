@@ -10,11 +10,11 @@ public class StateTest {
     public void testToString() {
         String expected = new StringBuilder().append("status: ")
                 .append("CLOSED")
-                .append("\tsuccessfulCalls: ")
+                .append(" successfulCalls: ")
                 .append(0)
-                .append("\tunsuccessfulCalls: ")
+                .append(" unsuccessfulCalls: ")
                 .append(0)
-                .append("\tcurrentRatio: ")
+                .append(" currentRatio: ")
                 .append(1.0)
                 .toString();
 

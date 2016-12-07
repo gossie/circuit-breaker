@@ -12,12 +12,12 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 
-@Aspect
+@Aspect("perthis(@annotation(IntegrationPoint))")
 public class CircuitBreaker {
 
     private State state;
 
-    @Around("execution(* * *(..)) && @annotation(IntegrationPoint)")
+    @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
     public Object call(ProceedingJoinPoint point) throws CircuitBreakerOpenException, InterruptedException {
         IntegrationPoint annotation = retrieveAnntotation(point);
 
@@ -40,12 +40,10 @@ public class CircuitBreaker {
         } catch (ExecutionException | TimeoutException e) {
             result = null;
             state.incrementUnsuccessfulCalls();
-        } catch (InterruptedException e) {
-            throw e;
         } finally {
             threadpool.shutdown();
         }
-
+        System.out.println(this + " : " + ((MethodSignature) point.getSignature()).getMethod().getName() + ": " + state);
         return result;
     }
 
