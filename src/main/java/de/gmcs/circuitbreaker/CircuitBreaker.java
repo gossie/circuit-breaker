@@ -17,7 +17,7 @@ public class CircuitBreaker {
 
     private State state;
 
-    @Around("execution(private * *(..)) && @annotation(IntegrationPoint)")
+    @Around("execution(* * *(..)) && @annotation(IntegrationPoint)")
     public Object call(ProceedingJoinPoint point) throws CircuitBreakerOpenException, InterruptedException {
         IntegrationPoint annotation = retrieveAnntotation(point);
 
