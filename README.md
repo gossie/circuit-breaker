@@ -9,6 +9,55 @@ TODO: example
 
 ## Usage
 
+There are two different ways to integrate a CircuitBreaker...
+Either way you need to add the circuitbreaker dependency to your project.
+
+```
+<dependency>
+  <groupId>de.gmcs</groupId>
+  <artifactId>circuitbreaker</artifactId>
+  <version>${circuitbreaker.version}</version>
+</dependency>
+```
+
 ### Integraton with AspectJ
+The CircuitBreaker class is annotated with the @Aspect annotation of the AspectJ framework. It wraps around all methods that are annotated with the `de.gmcs.circuitbreaker.IntegrationPoint` annotation.
+
+```
+public class Client {
+    private Service service;
+    
+    @IntegrationPoint(maxErrorRatio = 0.01, errorTimeout = 1000, openTimePeriod = 10000)
+    private Result callService(Parameter p1, Parameter p2) {
+        return service.performOperation(p1, p2);
+    }
+}
+```
+
+Add the aspectj-maven-plugin to make sure that the CircuitBreaker aspect is weaved around your IntegrationPoints.
+
+```
+<plugin>
+    <groupId>org.codehaus.mojo</groupId>
+    <artifactId>aspectj-maven-plugin</artifactId>
+    <version>1.9</version>
+    <configuration>
+        <weaveDependencies>
+            <weaveDependency>
+                <groupId>de.gmcs</groupId>
+                <artifactId>circuitbreaker</artifactId>
+            </weaveDependency>
+        </weaveDependencies>
+    </configuration>
+    <executions>
+        <execution>
+            <goals>
+                <goal>compile</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
 
 ### Programmatic integration
+Currently there is no support to add a CircuitBreaker without AspectJ.
