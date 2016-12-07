@@ -38,24 +38,24 @@ Add the aspectj-maven-plugin to make sure that the CircuitBreaker aspect is weav
 
 ```xml
 <plugin>
-    <groupId>org.codehaus.mojo</groupId>
-    <artifactId>aspectj-maven-plugin</artifactId>
-    <version>1.9</version>
-    <configuration>
-        <weaveDependencies>
-            <weaveDependency>
-                <groupId>de.gmcs</groupId>
-                <artifactId>circuitbreaker</artifactId>
-            </weaveDependency>
-        </weaveDependencies>
-    </configuration>
-    <executions>
-        <execution>
-            <goals>
-                <goal>compile</goal>
-            </goals>
-        </execution>
-    </executions>
+  <groupId>org.codehaus.mojo</groupId>
+  <artifactId>aspectj-maven-plugin</artifactId>
+  <version>1.9</version>
+  <configuration>
+    <weaveDependencies>
+      <weaveDependency>
+        <groupId>de.gmcs</groupId>
+        <artifactId>circuitbreaker</artifactId>
+      </weaveDependency>
+    </weaveDependencies>
+  </configuration>
+  <executions>
+    <execution>
+      <goals>
+        <goal>compile</goal>
+      </goals>
+    </execution>
+  </executions>
 </plugin>
 ```
 
