@@ -27,10 +27,8 @@ class State {
         ++successfulCalls;
         if(status == Status.OPEN) {
             status = Status.HALF_OPEN;
-        } else if(status == Status.HALF_OPEN) {
-            if(calculateCurrentRatio() <= maxErrorRatio) {
-                status = Status.CLOSED;
-            }
+        } else if(calculateCurrentRatio() <= maxErrorRatio) {
+            status = Status.CLOSED;
         }
     }
 
