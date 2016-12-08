@@ -14,9 +14,9 @@ Either way you need to add the circuitbreaker dependency to your project.
 
 ```xml
 <dependency>
-  <groupId>de.gmcs</groupId>
-  <artifactId>circuitbreaker</artifactId>
-  <version>${circuitbreaker.version}</version>
+  <groupId>com.github.gossie</groupId>
+  <artifactId>circuit-breaker</artifactId>
+  <version>${circuit-breaker.version}</version>
 </dependency>
 ```
 
@@ -26,7 +26,7 @@ The CircuitBreaker class is annotated with the @Aspect annotation of the AspectJ
 ```java
 public class Client {
     private Service service;
-    
+
     @IntegrationPoint(maxErrorRatio = 0.01, errorTimeout = 1000, openTimePeriod = 10000)
     private Result callService(Parameter p1, Parameter p2) {
         return service.performOperation(p1, p2);
@@ -42,10 +42,11 @@ Add the aspectj-maven-plugin to make sure that the CircuitBreaker aspect is weav
   <artifactId>aspectj-maven-plugin</artifactId>
   <version>1.9</version>
   <configuration>
+    <complianceLevel>1.8</complianceLevel>
     <weaveDependencies>
       <weaveDependency>
-        <groupId>de.gmcs</groupId>
-        <artifactId>circuitbreaker</artifactId>
+        <groupId>com.github.gossie</groupId>
+        <artifactId>circuit-breaker</artifactId>
       </weaveDependency>
     </weaveDependencies>
   </configuration>
