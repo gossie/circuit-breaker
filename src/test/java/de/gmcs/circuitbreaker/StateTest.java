@@ -14,8 +14,10 @@ public class StateTest {
                 .append(0)
                 .append(" unsuccessfulCalls: ")
                 .append(0)
-                .append(" currentRatio: ")
+                .append(" currentErrorRatio: ")
                 .append(1.0)
+                .append(" maxErrorRatio: ")
+                .append(0.05)
                 .toString();
 
         State state = new State(0.05, 5000);

@@ -9,11 +9,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface IntegrationPoint {
 
-    public static final double DEFAULT_MAX_ERROR_RATIO = 0.05;
     public static final long DEFAULT_ERROR_TIMEOUT = 250L;
-    public static final long DEFAULT_OPEN_TIME_PERIOD = 5000L;
 
-    double maxErrorRatio() default DEFAULT_MAX_ERROR_RATIO;
     long errorTimeout() default DEFAULT_ERROR_TIMEOUT;
-    long openTimePeriod() default DEFAULT_OPEN_TIME_PERIOD;
 }

@@ -65,8 +65,10 @@ class State {
                 .append(successfulCalls)
                 .append(" unsuccessfulCalls: ")
                 .append(unsuccessfulCalls)
-                .append(" currentRatio: ")
+                .append(" currentErrorRatio: ")
                 .append(calculateCurrentRatio())
+                .append(" maxErrorRatio: ")
+                .append(maxErrorRatio)
                 .toString();
     }
 }

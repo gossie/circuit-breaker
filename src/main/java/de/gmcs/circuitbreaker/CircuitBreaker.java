@@ -14,56 +14,61 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 
-@Aspect("perthis(@annotation(IntegrationPoint))")
+@Aspect("perthis(@within(IntegrationPointConfiguration))")
 public class CircuitBreaker {
 
     private State state;
 
     @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
-    public Object call(ProceedingJoinPoint point) throws InterruptedException {
-        IntegrationPoint annotation = retrieveAnntotation(point);
+    public Object call(ProceedingJoinPoint jointPoint) throws InterruptedException {
+        IntegrationPointConfiguration configuration = retrieveConfiguration(jointPoint);
+        IntegrationPoint integrationPoint = retrieveAnntotation(jointPoint);
 
-        initializeState(annotation);
+        initializeState(configuration);
 
         if (state.isOpen()) {
-            return determineEmptyResult(point);
+            return determineEmptyResult(jointPoint);
         }
 
-        long timeout = annotation.errorTimeout();
+        long timeout = integrationPoint.errorTimeout();
 
         Object result;
 
         ExecutorService threadpool = Executors.newFixedThreadPool(1);
-        Future<Object> future = threadpool.submit(new ServiceCall(point));
+        Future<Object> future = threadpool.submit(new ServiceCall(jointPoint));
 
         try {
             result = future.get(timeout, TimeUnit.MILLISECONDS);
             state.incrementSuccessfulCalls();
         } catch (ExecutionException | TimeoutException e) {
-            result = determineEmptyResult(point);
+            result = determineEmptyResult(jointPoint);
             state.incrementUnsuccessfulCalls();
         } finally {
             threadpool.shutdown();
         }
-
+        
         return result;
     }
 
-    private Object determineEmptyResult(ProceedingJoinPoint point) {
-        Class<?> returnType = ((MethodSignature) point.getSignature()).getMethod().getReturnType();
+    private Object determineEmptyResult(ProceedingJoinPoint jointPoint) {
+        Class<?> returnType = ((MethodSignature) jointPoint.getSignature()).getMethod().getReturnType();
         if(returnType.equals(Optional.class)) {
             return Optional.empty();
         }
         return null;
     }
 
-    private void initializeState(IntegrationPoint annotation) {
+    private void initializeState(IntegrationPointConfiguration configuration) {
         if (state == null) {
-            state = new State(annotation.maxErrorRatio(), annotation.openTimePeriod());
+            state = new State(configuration.maxErrorRatio(), configuration.openTimePeriod());
         }
     }
 
-    private IntegrationPoint retrieveAnntotation(ProceedingJoinPoint point) {
-        return ((MethodSignature) point.getSignature()).getMethod().getAnnotation(IntegrationPoint.class);
+    private IntegrationPointConfiguration retrieveConfiguration(ProceedingJoinPoint jointPoint) {
+        return ((MethodSignature) jointPoint.getSignature()).getMethod().getDeclaringClass().getAnnotation(IntegrationPointConfiguration.class);
+    }
+
+    private IntegrationPoint retrieveAnntotation(ProceedingJoinPoint jointPoint) {
+        return ((MethodSignature) jointPoint.getSignature()).getMethod().getAnnotation(IntegrationPoint.class);
     }
 }
