@@ -1,4 +1,4 @@
-package de.gmcs.circuitbreaker;
+package com.github.gossie.circuitbreaker;
 
 class IntegrationPointExecutionException extends RuntimeException {
 

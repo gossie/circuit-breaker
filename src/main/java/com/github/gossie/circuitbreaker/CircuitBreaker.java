@@ -1,4 +1,4 @@
-package de.gmcs.circuitbreaker;
+package com.github.gossie.circuitbreaker;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;

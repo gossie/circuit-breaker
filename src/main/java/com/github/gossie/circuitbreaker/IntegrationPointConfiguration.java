@@ -1,4 +1,4 @@
-package de.gmcs.circuitbreaker;
+package com.github.gossie.circuitbreaker;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
