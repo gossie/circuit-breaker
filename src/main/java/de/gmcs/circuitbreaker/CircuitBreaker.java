@@ -43,7 +43,7 @@ public class CircuitBreaker {
         } finally {
             threadpool.shutdown();
         }
-        System.out.println(this + " : " + ((MethodSignature) point.getSignature()).getMethod().getName() + ": " + state);
+
         return result;
     }
 
