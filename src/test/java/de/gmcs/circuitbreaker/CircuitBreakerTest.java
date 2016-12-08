@@ -154,12 +154,12 @@ public class CircuitBreakerTest {
 
     private static class TestClient {
 
-        @IntegrationPoint(maxErrorRatio = 0.4, errorTimeout = 250, openTimePeriod = 1000)
+        @IntegrationPoint(maxErrorRatio = 0.4, errorTimeout = 250, openTimePeriod = 900)
         public Object callService(Object o) {
             return null;
         }
 
-        @IntegrationPoint(maxErrorRatio = 0.4, errorTimeout = 250, openTimePeriod = 1000)
+        @IntegrationPoint(maxErrorRatio = 0.4, errorTimeout = 250, openTimePeriod = 900)
         public Optional<Object> callOptionalService(Object o) {
             return null;
         }
