@@ -21,10 +21,9 @@ public class CircuitBreaker {
 
     @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
     public Object call(ProceedingJoinPoint jointPoint) throws InterruptedException {
-        IntegrationPointConfiguration configuration = retrieveConfiguration(jointPoint);
         IntegrationPoint integrationPoint = retrieveAnntotation(jointPoint);
 
-        initializeState(configuration);
+        initializeState(jointPoint);
 
         if (state.isOpen()) {
             return determineEmptyResult(jointPoint);
@@ -46,7 +45,7 @@ public class CircuitBreaker {
         } finally {
             threadpool.shutdown();
         }
-        
+
         return result;
     }
 
@@ -58,8 +57,9 @@ public class CircuitBreaker {
         return null;
     }
 
-    private void initializeState(IntegrationPointConfiguration configuration) {
+    private void initializeState(ProceedingJoinPoint jointPoint) {
         if (state == null) {
+            IntegrationPointConfiguration configuration = retrieveConfiguration(jointPoint);
             state = new State(configuration.maxErrorRatio(), configuration.openTimePeriod());
         }
     }
