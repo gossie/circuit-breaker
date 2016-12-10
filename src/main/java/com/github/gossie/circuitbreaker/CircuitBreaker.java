@@ -60,7 +60,7 @@ public class CircuitBreaker {
     private void initializeState(ProceedingJoinPoint jointPoint) {
         if (state == null) {
             IntegrationPointConfiguration configuration = retrieveConfiguration(jointPoint);
-            state = new State(configuration.maxErrorRatio(), configuration.openTimePeriod());
+            state = new State(configuration.maxErrorRatio(), configuration.openTimePeriod(), configuration.maxNumberOfSamples());
         }
     }
 

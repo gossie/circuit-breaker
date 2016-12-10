@@ -2,20 +2,21 @@ package com.github.gossie.circuitbreaker;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class StateTest {
 
     @Test
     public void testIsOpen_emptyState() {
-        State state = new State(0.5, 100L);
+        State state = new State(0.5, 100L, 5);
 
         assertThat(state.isOpen()).isEqualTo(false);
     }
 
     @Test
     public void testIsOpen_open() {
-        State state = new State(0.5, 100L);
+        State state = new State(0.5, 100L, 5);
 
         state.incrementSuccessfulCalls();
         state.incrementSuccessfulCalls();
@@ -28,7 +29,7 @@ public class StateTest {
 
     @Test
     public void testIsOpen_closesAfterOpenTimePeriod() {
-        State state = new State(0.5, 100L);
+        State state = new State(0.5, 100L, 5);
 
         state.incrementSuccessfulCalls();
         state.incrementSuccessfulCalls();
@@ -43,7 +44,7 @@ public class StateTest {
 
     @Test
     public void testIsOpen_closed_open_halfOpen_open() {
-        State state = new State(0.5, 100L);
+        State state = new State(0.5, 100L, 5);
 
         state.incrementSuccessfulCalls();
         state.incrementSuccessfulCalls();
@@ -53,12 +54,25 @@ public class StateTest {
 
         sleep(150L);
 
-
         state.incrementUnsuccessfulCalls();
         assertThat(state.isOpen()).isEqualTo(true);
     }
 
     @Test
+    public void testIsOpen_samples() {
+        State state = new State(0.2, 100L, 5);
+
+        for(int i=0; i<10; ++i) {
+            state.incrementSuccessfulCalls();
+        }
+        state.incrementUnsuccessfulCalls();
+        state.incrementUnsuccessfulCalls();
+
+        assertThat(state.isOpen()).isEqualTo(true);
+    }
+
+    @Test
+    @Ignore
     public void testToString() {
         String expected = new StringBuilder().append("status: ")
                 .append("CLOSED")
@@ -72,7 +86,7 @@ public class StateTest {
                 .append(0.05)
                 .toString();
 
-        State state = new State(0.05, 5000);
+        State state = new State(0.05, 5000L, 5);
         assertThat(state.toString()).isEqualTo(expected);
     }
 

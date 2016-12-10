@@ -1,5 +1,6 @@
 package com.github.gossie.circuitbreaker;
 
+import java.util.Arrays;
 import java.util.Date;
 
 class State {
@@ -12,19 +13,22 @@ class State {
 
     private double maxErrorRatio;
     private long openTimePeriod;
+    private int maxNumberOfSamples;
 
     private Status status = Status.CLOSED;
-    private long successfulCalls;
-    private long unsuccessfulCalls;
+    private boolean[] samples;
+    private int sampleIndex;
     private long openTimestamp;
 
-    State(double maxErrorRatio, long openTimePeriod) {
+    State(double maxErrorRatio, long openTimePeriod, int maxNumberOfSamples) {
         this.maxErrorRatio = maxErrorRatio;
         this.openTimePeriod = openTimePeriod;
+        this.samples = new boolean[maxNumberOfSamples];
+        Arrays.fill(samples, true);
     }
 
     public void incrementSuccessfulCalls() {
-        ++successfulCalls;
+        samples[determinSampleIndex()] = true;
         if(status == Status.OPEN) {
             status = Status.HALF_OPEN;
         } else if(calculateCurrentRatio() <= maxErrorRatio) {
@@ -33,8 +37,7 @@ class State {
     }
 
     public void incrementUnsuccessfulCalls() {
-        ++unsuccessfulCalls;
-
+        samples[determinSampleIndex()] = false;
         if((status == Status.CLOSED && calculateCurrentRatio() > maxErrorRatio) || status == Status.HALF_OPEN || status == Status.OPEN) {
             openUp();
         }
@@ -51,20 +54,33 @@ class State {
     }
 
     private double calculateCurrentRatio() {
-        if (successfulCalls == 0L) {
+        int successfulCalls = 0;
+        int unsuccessfulCalls = 0;
+        for(int i=0; i<samples.length; i++) {
+            if(samples[i]) {
+                ++successfulCalls;
+                ++unsuccessfulCalls;
+            }
+        }
+
+        if (successfulCalls == 0) {
             return 1.0;
         }
         return (double) unsuccessfulCalls / successfulCalls;
+    }
+
+    private int determinSampleIndex() {
+        int currentIndex = sampleIndex % samples.length;
+        sampleIndex = currentIndex + 1;
+        return currentIndex;
     }
 
     @Override
     public String toString() {
         return new StringBuilder().append("status: ")
                 .append(status)
-                .append(" successfulCalls: ")
-                .append(successfulCalls)
-                .append(" unsuccessfulCalls: ")
-                .append(unsuccessfulCalls)
+                .append(" samples: ")
+                .append(samples)
                 .append(" currentErrorRatio: ")
                 .append(calculateCurrentRatio())
                 .append(" maxErrorRatio: ")
