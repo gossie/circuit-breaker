@@ -71,25 +71,6 @@ public class StateTest {
         assertThat(state.isOpen()).isEqualTo(true);
     }
 
-    @Test
-    @Ignore
-    public void testToString() {
-        String expected = new StringBuilder().append("status: ")
-                .append("CLOSED")
-                .append(" successfulCalls: ")
-                .append(0)
-                .append(" unsuccessfulCalls: ")
-                .append(0)
-                .append(" currentErrorRatio: ")
-                .append(1.0)
-                .append(" maxErrorRatio: ")
-                .append(0.05)
-                .toString();
-
-        State state = new State(0.05, 5000L, 5);
-        assertThat(state.toString()).isEqualTo(expected);
-    }
-
     private void sleep(long millis) {
         try {
             Thread.sleep(millis);

@@ -74,17 +74,4 @@ class State {
         sampleIndex = currentIndex + 1;
         return currentIndex;
     }
-
-    @Override
-    public String toString() {
-        return new StringBuilder().append("status: ")
-                .append(status)
-                .append(" samples: ")
-                .append(samples)
-                .append(" currentErrorRatio: ")
-                .append(calculateCurrentRatio())
-                .append(" maxErrorRatio: ")
-                .append(maxErrorRatio)
-                .toString();
-    }
 }
