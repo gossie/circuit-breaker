@@ -152,7 +152,7 @@ public class CircuitBreakerTest {
         return point;
     }
 
-    @IntegrationPointConfiguration(maxErrorRatio = 0.4, openTimePeriod = 900)
+    @IntegrationPointConfiguration(maxErrorRatio = 0.4, openTimePeriod = 900, maxNumberOfSamples = 2)
     private static class TestClient {
 
         @IntegrationPoint(errorTimeout = 250)

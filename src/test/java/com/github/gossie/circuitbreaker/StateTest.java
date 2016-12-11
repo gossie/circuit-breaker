@@ -20,7 +20,7 @@ public class StateTest {
 
         state.incrementSuccessfulCalls();
         state.incrementSuccessfulCalls();
-        state.incrementSuccessfulCalls();
+        state.incrementUnsuccessfulCalls();
         state.incrementUnsuccessfulCalls();
         state.incrementUnsuccessfulCalls();
 
@@ -33,7 +33,7 @@ public class StateTest {
 
         state.incrementSuccessfulCalls();
         state.incrementSuccessfulCalls();
-        state.incrementSuccessfulCalls();
+        state.incrementUnsuccessfulCalls();
         state.incrementUnsuccessfulCalls();
         state.incrementUnsuccessfulCalls();
 
@@ -48,7 +48,7 @@ public class StateTest {
 
         state.incrementSuccessfulCalls();
         state.incrementSuccessfulCalls();
-        state.incrementSuccessfulCalls();
+        state.incrementUnsuccessfulCalls();
         state.incrementUnsuccessfulCalls();
         state.incrementUnsuccessfulCalls();
 
@@ -69,6 +69,12 @@ public class StateTest {
         state.incrementUnsuccessfulCalls();
 
         assertThat(state.isOpen()).isEqualTo(true);
+        sleep(110L);
+
+        for(int i=0; i<5; i++) {
+            state.incrementSuccessfulCalls();
+            assertThat(state.isOpen()).isEqualTo(false);
+        }
     }
 
     private void sleep(long millis) {

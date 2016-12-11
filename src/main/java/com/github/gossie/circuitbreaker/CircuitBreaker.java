@@ -17,7 +17,18 @@ import org.aspectj.lang.reflect.MethodSignature;
 @Aspect("perthis(@within(IntegrationPointConfiguration))")
 public class CircuitBreaker {
 
-    private State state;
+    private final ExecutorService threadpool;
+    private volatile State state;
+
+    public CircuitBreaker() {
+        threadpool = Executors.newFixedThreadPool(1);
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                threadpool.shutdown();
+            }
+        });
+    }
 
     @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
     public Object call(ProceedingJoinPoint jointPoint) throws InterruptedException {
@@ -33,7 +44,6 @@ public class CircuitBreaker {
 
         Object result;
 
-        ExecutorService threadpool = Executors.newFixedThreadPool(1);
         Future<Object> future = threadpool.submit(new ServiceCall(jointPoint));
 
         try {
@@ -42,8 +52,6 @@ public class CircuitBreaker {
         } catch (ExecutionException | TimeoutException e) {
             result = determineEmptyResult(jointPoint);
             state.incrementUnsuccessfulCalls();
-        } finally {
-            threadpool.shutdown();
         }
 
         return result;
@@ -59,8 +67,12 @@ public class CircuitBreaker {
 
     private void initializeState(ProceedingJoinPoint jointPoint) {
         if (state == null) {
-            IntegrationPointConfiguration configuration = retrieveConfiguration(jointPoint);
-            state = new State(configuration.maxErrorRatio(), configuration.openTimePeriod(), configuration.maxNumberOfSamples());
+            synchronized(this) {
+                if(state == null) {
+                    IntegrationPointConfiguration configuration = retrieveConfiguration(jointPoint);
+                    state = new State(configuration.maxErrorRatio(), configuration.openTimePeriod(), configuration.maxNumberOfSamples());
+                }
+            }
         }
     }
 

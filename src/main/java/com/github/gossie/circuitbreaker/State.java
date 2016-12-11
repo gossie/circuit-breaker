@@ -13,7 +13,6 @@ class State {
 
     private double maxErrorRatio;
     private long openTimePeriod;
-    private int maxNumberOfSamples;
 
     private Status status = Status.CLOSED;
     private boolean[] samples;
@@ -54,19 +53,13 @@ class State {
     }
 
     private double calculateCurrentRatio() {
-        int successfulCalls = 0;
         int unsuccessfulCalls = 0;
         for(int i=0; i<samples.length; i++) {
-            if(samples[i]) {
-                ++successfulCalls;
+            if(!samples[i]) {
                 ++unsuccessfulCalls;
             }
         }
-
-        if (successfulCalls == 0) {
-            return 1.0;
-        }
-        return (double) unsuccessfulCalls / successfulCalls;
+        return (double) unsuccessfulCalls / samples.length;
     }
 
     private int determinSampleIndex() {
