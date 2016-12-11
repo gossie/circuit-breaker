@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/gossie/circuit-breaker.svg?branch=master)](https://travis-ci.org/gossie/circuit-breaker)
 [![Coverage Status](https://coveralls.io/repos/github/gossie/circuit-breaker/badge.svg?branch=master)](https://coveralls.io/github/gossie/circuit-breaker?branch=master)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.gossie/circuit-breaker/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.gossie/circuit-breaker)
+[![JavaDoc](http://javadoc-badge.appspot.com/com.github.gossie/circuit-breaker.svg?label=JavaDoc)](http://javadoc-badge.appspot.com/com.github.gossie/circuit-breaker)
 
 # Circuit Breaker
 
