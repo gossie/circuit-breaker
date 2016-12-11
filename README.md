@@ -11,6 +11,7 @@ If a certain amount of calls were unsuccessful, that means an exception was caug
 After a certain amount of time, the CircuitBreaker will switch to the status HALF_OPEN. In that state the calls are forwarded to the webservice. If there is a failure, the CircuitBreaker will open up again. If a certain number of calls succeed the CircuitBreaker will close.
 
 You can configure the following:
+* *errorTimeout*: sdf
 * *maxNumberOfSamples*: The state of the CurcuitBreaker refers to the last n calls, where n is the maxNumberOfSamples
 * *maxErrorRation*: What percentage of tracked calls has to fail until the CircuitBreaker opens up
 * *openTimePeriod*: How long will the CircuitBreaker stay open and reject calls
@@ -21,8 +22,7 @@ To make use of a CircuitBreaker you just need to add a few annotation to your co
 
 ## Sample code
 
-The CircuitBreaker class is ist an [AspectJ](https://eclipse.org/aspectj/) @Aspect.  
-It wraps around all methods that are annotated with the `com.github.gossie.circuitbreaker.IntegrationPoint` annotation.
+The CircuitBreaker class is ist an [AspectJ](https://eclipse.org/aspectj/) @Aspect. For each instance of a class annotated with @IntegrationPointConfiguration a CircuitBreaker instance is created. The CircuitBreaker intercepts all method calls of methods that are annotated with @IntegrationPoint.
 
 ```java
 @IntegrationPointConfiguration(maxErrorRatio = 0.01, openTimePeriod = 10000, maxNumberOfSamples = 250)
@@ -30,8 +30,13 @@ public class Client {
     private WebService service;
 
     @IntegrationPoint(errorTimeout = 1000)
-    private Result callService(Parameter p1, Parameter p2) {
-        return service.performOperation(p1, p2);
+    private Result callService1(Parameter p1, Parameter p2) {
+        return service.performOperation1(p1, p2);
+    }
+
+    @IntegrationPoint(errorTimeout = 2000)
+    private Result callService2(Parameter p3) {
+        return service.performOperation2(p3);
     }
 }
 ```
