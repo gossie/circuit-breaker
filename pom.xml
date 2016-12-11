@@ -19,13 +19,6 @@
         </license>
     </licenses>
 
-    <developers>
-        <developer>
-            <name>André Schreck</name>
-            <email>andre.schreck@gmail.com</email>
-        </developer>
-    </developers>
-
     <scm>
         <connection>scm:git:git@github.com:gossie/circuitbreaker.git</connection>
         <developerConnection>scm:git:git@github.com:gossie/circuitbreaker.git</developerConnection>
