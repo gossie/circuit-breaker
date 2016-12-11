@@ -77,6 +77,11 @@ public class StateTest {
         }
     }
 
+    @Test
+    public void testToString() {
+        assertThat(new State(0.2, 100L, 3).toString()).isEqualTo("status: CLOSED samples: [true, true, true] currentErrorRatio: 0.0 maxErrorRatio: 0.2");
+    }
+
     private void sleep(long millis) {
         try {
             Thread.sleep(millis);

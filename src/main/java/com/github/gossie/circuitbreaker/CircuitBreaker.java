@@ -14,6 +14,10 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 
+/**
+ * The {@link CircuitBreaker} is implemented as an AspectJ {@link Aspect}. For each class annotated with
+ * the {@link IntegrationPoint} annotation, a {@link CircuitBreaker} instance is created.
+ */
 @Aspect("perthis(@within(IntegrationPointConfiguration))")
 public class CircuitBreaker {
 
@@ -30,6 +34,12 @@ public class CircuitBreaker {
         });
     }
 
+    /**
+     * The method wraps around each method annotated with the {@link IntegrationPoint} annotation.
+     *
+     * @param jointPoint The {@link ProceedingJoinPoint} representing the original method invocation.
+     * @throws InterruptedException Is thrown if this {@link Thread} is interrupted while waiting.
+     */
     @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
     public Object call(ProceedingJoinPoint jointPoint) throws InterruptedException {
         IntegrationPoint integrationPoint = retrieveAnntotation(jointPoint);
