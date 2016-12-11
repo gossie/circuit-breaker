@@ -11,10 +11,10 @@ If a certain amount of calls were unsuccessful, that means an exception was caug
 After a certain amount of time, the CircuitBreaker will switch to the status HALF_OPEN. In that state the calls are forwarded to the webservice. If there is a failure, the CircuitBreaker will open up again. If a certain number of calls succeed the CircuitBreaker will close.
 
 You can configure the following:
-* *errorTimeout*: sdf
+* *errorTimeout*: How long the CircuitBreaker waits until the call is marked as unsuccessful
 * *maxNumberOfSamples*: The state of the CurcuitBreaker refers to the last n calls, where n is the maxNumberOfSamples
-* *maxErrorRation*: What percentage of tracked calls has to fail until the CircuitBreaker opens up
-* *openTimePeriod*: How long will the CircuitBreaker stay open and reject calls
+* *maxErrorRation*: The percentage of tracked calls that has to fail until the CircuitBreaker opens up
+* *openTimePeriod*: How long the CircuitBreaker stays open and reject calls
 
 ## Usage
 
