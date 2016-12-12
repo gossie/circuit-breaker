@@ -69,7 +69,7 @@ After a certain amount of time, the CircuitBreaker will switch to the status HAL
 <h2>
 <a id="sample-code" class="anchor" href="#sample-code" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sample code</h2>
 
-<p>The CircuitBreaker class is ist an <a href="https://eclipse.org/aspectj/">AspectJ</a> <a href="https://github.com/Aspect" class="user-mention">@Aspect</a>. For each instance of a class annotated with @IntegrationPointConfiguration a CircuitBreaker instance is created. The CircuitBreaker intercepts all method calls of methods that are annotated with @IntegrationPoint.</p>
+<p>The CircuitBreaker class is ist an <a href="https://eclipse.org/aspectj/">AspectJ</a> @Aspect. For each instance of a class annotated with @IntegrationPointConfiguration a CircuitBreaker instance is created. The CircuitBreaker intercepts all method calls of methods that are annotated with @IntegrationPoint.</p>
 
 <div class="highlight highlight-source-java"><pre><span class="pl-k">@IntegrationPointConfiguration</span>(<span class="pl-c1">maxErrorRatio</span> <span class="pl-k">=</span> <span class="pl-c1">0.01</span>, <span class="pl-c1">openTimePeriod</span> <span class="pl-k">=</span> <span class="pl-c1">10000</span>, <span class="pl-c1">maxNumberOfSamples</span> <span class="pl-k">=</span> <span class="pl-c1">250</span>)
 <span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-en">Client</span> {
