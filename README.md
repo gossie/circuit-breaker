@@ -22,7 +22,7 @@ You can configure the following:
 
 To make use of a CircuitBreaker you just need to add a few annotation to your code and make some adjustments to your pom file.
 
-## Sample code
+### Sample code
 
 The CircuitBreaker class is ist an [AspectJ](https://eclipse.org/aspectj/) @Aspect. For each instance of a class annotated with @IntegrationPointConfiguration a CircuitBreaker instance is created. The CircuitBreaker intercepts all method calls of methods that are annotated with @IntegrationPoint.
 

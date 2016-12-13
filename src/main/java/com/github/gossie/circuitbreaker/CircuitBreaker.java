@@ -36,8 +36,12 @@ public class CircuitBreaker {
 
     /**
      * The method wraps around each method annotated with the {@link IntegrationPoint} annotation.
+     * The method
      *
      * @param jointPoint The {@link ProceedingJoinPoint} representing the original method invocation.
+     * @return Returns the return value of the wrapped method. If the operation times out, throws an
+     *         exception or the CircuitBreaker is open, the method returns null or an empty Optional (if
+     *         the return value of the wrapped method is Optional).
      * @throws InterruptedException Is thrown if this {@link Thread} is interrupted while waiting.
      */
     @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
