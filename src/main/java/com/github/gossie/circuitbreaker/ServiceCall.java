@@ -1,24 +1,27 @@
 package com.github.gossie.circuitbreaker;
 
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 
 /**
  * The class represents a call of an {@link IntegrationPoint}. It is started in a new {@link Thread}.
  */
-class ServiceCall implements Callable<Object> {
+class ServiceCall<A, R> implements Callable<R> {
 
-    private ProceedingJoinPoint point;
+    private Function<A, R> function;
+    private A argument;
 
-    ServiceCall(ProceedingJoinPoint point) {
-        this.point = point;
+    ServiceCall(Function<A, R> function, A argument) {
+        this.function = function;
+        this.argument = argument;
     }
 
     @Override
-    public Object call() {
+    public R call() {
         try {
-            return point.proceed();
+            return function.apply(argument);
         } catch (Throwable e) {
             throw new IntegrationPointExecutionException(e);
         }

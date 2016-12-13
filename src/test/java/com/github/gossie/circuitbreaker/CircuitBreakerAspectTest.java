@@ -14,16 +14,16 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-public class CircuitBreakerTest {
+public class CircuitBreakerAspectTest {
 
     @Test
     public void testCall() throws Throwable {
         ProceedingJoinPoint point = mockProceedingJoinPoint("callService");
         when(point.proceed()).thenReturn(1);
 
-        CircuitBreaker circuitBreaker = new CircuitBreaker();
+        CircuitBreakerAspect circuitBreakerAspect = new CircuitBreakerAspect();
 
-        assertThat(circuitBreaker.call(point)).isEqualTo(1);
+        assertThat(circuitBreakerAspect.call(point)).isEqualTo(1);
     }
 
     @Test
@@ -31,9 +31,9 @@ public class CircuitBreakerTest {
         ProceedingJoinPoint point = mockProceedingJoinPoint("callService");
         when(point.proceed()).thenThrow(new RuntimeException());
 
-        CircuitBreaker circuitBreaker = new CircuitBreaker();
+        CircuitBreakerAspect circuitBreakerAspect = new CircuitBreakerAspect();
 
-        assertThat(circuitBreaker.call(point)).isNull();
+        assertThat(circuitBreakerAspect.call(point)).isNull();
     }
 
     @Test
@@ -48,13 +48,13 @@ public class CircuitBreakerTest {
             }
         });
 
-        CircuitBreaker circuitBreaker = new CircuitBreaker();
+        CircuitBreakerAspect circuitBreakerAspect = new CircuitBreakerAspect();
 
-        assertThat(circuitBreaker.call(point)).isNull();
+        assertThat(circuitBreakerAspect.call(point)).isNull();
     }
 
     @Test
-    public void testCall_circuitBreakerOpensUp() throws Throwable {
+    public void testCall_circuitBreakerAspectOpensUp() throws Throwable {
         ProceedingJoinPoint point = mockProceedingJoinPoint("callService");
         when(point.proceed())
                 .thenReturn(1)
@@ -65,19 +65,19 @@ public class CircuitBreakerTest {
                 .thenReturn(4)
                 .thenReturn(5);
 
-        CircuitBreaker circuitBreaker = new CircuitBreaker();
+        CircuitBreakerAspect circuitBreakerAspect = new CircuitBreakerAspect();
 
-        assertThat(circuitBreaker.call(point)).isEqualTo(1);
-        assertThat(circuitBreaker.call(point)).isEqualTo(2);
-        assertThat(circuitBreaker.call(point)).isEqualTo(null);
-        assertThat(circuitBreaker.call(point)).isEqualTo(null);
+        assertThat(circuitBreakerAspect.call(point)).isEqualTo(1);
+        assertThat(circuitBreakerAspect.call(point)).isEqualTo(2);
+        assertThat(circuitBreakerAspect.call(point)).isEqualTo(null);
+        assertThat(circuitBreakerAspect.call(point)).isEqualTo(null);
         sleep(1000);
-        assertThat(circuitBreaker.call(point)).isEqualTo(null);
-        assertThat(circuitBreaker.call(point)).isEqualTo(null);
+        assertThat(circuitBreakerAspect.call(point)).isEqualTo(null);
+        assertThat(circuitBreakerAspect.call(point)).isEqualTo(null);
         sleep(1000);
-        assertThat(circuitBreaker.call(point)).isEqualTo(3);
-        assertThat(circuitBreaker.call(point)).isEqualTo(4);
-        assertThat(circuitBreaker.call(point)).isEqualTo(5);
+        assertThat(circuitBreakerAspect.call(point)).isEqualTo(3);
+        assertThat(circuitBreakerAspect.call(point)).isEqualTo(4);
+        assertThat(circuitBreakerAspect.call(point)).isEqualTo(5);
     }
 
     @Test
@@ -85,9 +85,9 @@ public class CircuitBreakerTest {
         ProceedingJoinPoint point = mockProceedingJoinPoint("callOptionalService");
         when(point.proceed()).thenReturn(Optional.of(1));
 
-        CircuitBreaker circuitBreaker = new CircuitBreaker();
+        CircuitBreakerAspect circuitBreakerAspect = new CircuitBreakerAspect();
 
-        assertThat(circuitBreaker.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).contains(1));
+        assertThat(circuitBreakerAspect.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).contains(1));
     }
 
     @Test
@@ -102,36 +102,36 @@ public class CircuitBreakerTest {
             }
         });
 
-        CircuitBreaker circuitBreaker = new CircuitBreaker();
+        CircuitBreakerAspect circuitBreakerAspect = new CircuitBreakerAspect();
 
-        assertThat(circuitBreaker.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).isEmpty());
+        assertThat(circuitBreakerAspect.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).isEmpty());
     }
 
     @Test
-    public void testCallOptional_circuitBreakerOpensUp() throws Throwable {
+    public void testCallOptional_circuitBreakerAspectOpensUp() throws Throwable {
         ProceedingJoinPoint point = mockProceedingJoinPoint("callOptionalService");
         when(point.proceed())
-                .thenReturn(1)
-                .thenReturn(2)
+                .thenReturn(Optional.of(1))
+                .thenReturn(Optional.of(2))
                 .thenThrow(new RuntimeException())
                 .thenThrow(new RuntimeException())
-                .thenReturn(3)
-                .thenReturn(4)
-                .thenReturn(5);
+                .thenReturn(Optional.of(3))
+                .thenReturn(Optional.of(4))
+                .thenReturn(Optional.of(5));
 
-        CircuitBreaker circuitBreaker = new CircuitBreaker();
+        CircuitBreakerAspect circuitBreakerAspect = new CircuitBreakerAspect();
 
-        assertThat(circuitBreaker.call(point)).isEqualTo(1);
-        assertThat(circuitBreaker.call(point)).isEqualTo(2);
-        assertThat(circuitBreaker.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).isEmpty());
-        assertThat(circuitBreaker.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).isEmpty());
+        assertThat(circuitBreakerAspect.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).contains(1));
+        assertThat(circuitBreakerAspect.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).contains(2));
+        assertThat(circuitBreakerAspect.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).isEmpty());
+        assertThat(circuitBreakerAspect.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).isEmpty());
         sleep(1000);
-        assertThat(circuitBreaker.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).isEmpty());
-        assertThat(circuitBreaker.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).isEmpty());
+        assertThat(circuitBreakerAspect.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).isEmpty());
+        assertThat(circuitBreakerAspect.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).isEmpty());
         sleep(1000);
-        assertThat(circuitBreaker.call(point)).isEqualTo(3);
-        assertThat(circuitBreaker.call(point)).isEqualTo(4);
-        assertThat(circuitBreaker.call(point)).isEqualTo(5);
+        assertThat(circuitBreakerAspect.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).contains(3));
+        assertThat(circuitBreakerAspect.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).contains(4));
+        assertThat(circuitBreakerAspect.call(point)).isInstanceOfSatisfying(Optional.class, o -> assertThat(o).contains(5));
     }
 
     private void sleep(long millis) {

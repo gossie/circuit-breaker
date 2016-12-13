@@ -1,30 +1,25 @@
 package com.github.gossie.circuitbreaker;
 
+import java.util.function.Function;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
+import java.lang.reflect.Method;
 import java.util.Optional;
 
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.reflect.MethodSignature;
-
 /**
- * The {@link CircuitBreaker} is implemented as an AspectJ {@link Aspect}. For each class annotated with
- * the {@link IntegrationPoint} annotation, a {@link CircuitBreaker} instance is created.
+ * Document me!
  */
-@Aspect("perthis(@within(IntegrationPointConfiguration))")
 public class CircuitBreaker {
 
     private final ExecutorService threadpool;
-    private volatile State state;
+    private State state;
 
-    public CircuitBreaker() {
+    public CircuitBreaker(double maxErrorRatio, long openTimePeriod, int maxNumberOfSamples) {
+        state = new State(maxErrorRatio, openTimePeriod, maxNumberOfSamples);
         threadpool = Executors.newFixedThreadPool(1);
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -35,66 +30,42 @@ public class CircuitBreaker {
     }
 
     /**
-     * The method wraps around each method annotated with the {@link IntegrationPoint} annotation.
-     * The method
-     *
-     * @param jointPoint The {@link ProceedingJoinPoint} representing the original method invocation.
+     * Document me!
+     * @param function The {@link Function} wrapped by this CircuitBreaker.
+     * @param argument The argument that should be passed to the {@link Function}.
+     * @param errorTimeout The maximum number of milliseconds that the execution of the given {@link Function}
+     *         may take.
      * @return Returns the return value of the wrapped method. If the operation times out, throws an
      *         exception or the CircuitBreaker is open, the method returns null or an empty Optional (if
      *         the return value of the wrapped method is Optional).
-     * @throws InterruptedException Is thrown if this {@link Thread} is interrupted while waiting.
+     * @throws InterruptedException
      */
-    @Around("execution(* *(..)) && @annotation(IntegrationPoint)")
-    public Object call(ProceedingJoinPoint jointPoint) throws InterruptedException {
-        IntegrationPoint integrationPoint = retrieveAnntotation(jointPoint);
-
-        initializeState(jointPoint);
+    public <A, R> R call(Function<A, R> function, A argument, long errorTimeout) throws InterruptedException {
 
         if (state.isOpen()) {
-            return determineEmptyResult(jointPoint);
+            return (R) determineEmptyResult(function.getClass().getMethods()[0]);
         }
 
-        long timeout = integrationPoint.errorTimeout();
+        R result;
 
-        Object result;
-
-        Future<Object> future = threadpool.submit(new ServiceCall(jointPoint));
+        Future<R> future = threadpool.submit(new ServiceCall<A, R>(function, argument));
 
         try {
-            result = future.get(timeout, TimeUnit.MILLISECONDS);
+            result = future.get(errorTimeout, TimeUnit.MILLISECONDS);
             state.incrementSuccessfulCalls();
         } catch (ExecutionException | TimeoutException e) {
-            result = determineEmptyResult(jointPoint);
+            result = (R) determineEmptyResult(function.getClass().getMethods()[0]);
             state.incrementUnsuccessfulCalls();
         }
 
         return result;
     }
 
-    private Object determineEmptyResult(ProceedingJoinPoint jointPoint) {
-        Class<?> returnType = ((MethodSignature) jointPoint.getSignature()).getMethod().getReturnType();
-        if(returnType.equals(Optional.class)) {
-            return Optional.empty();
-        }
+    private Object determineEmptyResult(Method method) {
+
+         if(method.getReturnType().equals(Optional.class)) {
+             return Optional.empty();
+         }
         return null;
-    }
-
-    private void initializeState(ProceedingJoinPoint jointPoint) {
-        if (state == null) {
-            synchronized(this) {
-                if(state == null) {
-                    IntegrationPointConfiguration configuration = retrieveConfiguration(jointPoint);
-                    state = new State(configuration.maxErrorRatio(), configuration.openTimePeriod(), configuration.maxNumberOfSamples());
-                }
-            }
-        }
-    }
-
-    private IntegrationPointConfiguration retrieveConfiguration(ProceedingJoinPoint jointPoint) {
-        return ((MethodSignature) jointPoint.getSignature()).getMethod().getDeclaringClass().getAnnotation(IntegrationPointConfiguration.class);
-    }
-
-    private IntegrationPoint retrieveAnntotation(ProceedingJoinPoint jointPoint) {
-        return ((MethodSignature) jointPoint.getSignature()).getMethod().getAnnotation(IntegrationPoint.class);
     }
 }
